@@ -12,3 +12,8 @@ class TreeModel(object):
     y_pred = self.model.predict(X_valid)
 
     return y_pred
+  
+  def feature_selection(self):
+    feature_importance =self.model.feature_importances_
+    
+    return feature_importance

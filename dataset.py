@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -42,12 +41,14 @@ class MCTSDataset(object):
     self.train_data = self.train_data.drop(columns=nan_features)
 
     # drop useless features: can't use in test data
-    self.train_data = self.train_data.drop(columns=['num_wins_agent1', 'num_draws_agent1', 'num_losses_agent1'])
+    self.train_data = self.train_data.drop(columns=['Id', 'num_wins_agent1', 'num_draws_agent1', 'num_losses_agent1'])
 
     # string features to vector
     string_features = ['GameRulesetName', 'agent1', 'agent2', 'EnglishRules', 'LudRules']
+
     useless_string_features = ['GameRulesetName', 'EnglishRules']
     self.train_data = self.train_data.drop(columns=useless_string_features)
+    
     new_features = ['algorithm','exploration_const', 'playout', 'score']
     for agent in ['agent1', 'agent2']:
       for type, feature in enumerate(new_features):

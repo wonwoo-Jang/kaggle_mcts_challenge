@@ -1,4 +1,3 @@
-import os
 from sklearn.metrics import mean_squared_error
 
 class Engine(object):
@@ -11,8 +10,11 @@ class Engine(object):
 
   def train(self):
     self.model.fit(self.X_train, self.y_train)
+    self.y_pred = self.model.val(self.X_train)
+    rmse = mean_squared_error(self.y_train, self.y_pred, squared=False)
+    print(f"train RMSE: {rmse}")
 
   def val(self):
     self.y_pred = self.model.val(self.X_valid)
     rmse = mean_squared_error(self.y_valid, self.y_pred, squared=False)
-    print(f"RMSE: {rmse}")
+    print(f"valid RMSE: {rmse}")

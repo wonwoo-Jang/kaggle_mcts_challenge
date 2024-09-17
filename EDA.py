@@ -34,3 +34,12 @@ val_features = train_data.drop(columns=identical_features)
 val_features = val_features.drop(columns=nan_features)
 string_columns = val_features.select_dtypes(include='object').columns.tolist()
 print(f'string type columns: {string_columns}') # results: ['GameRulesetName', 'agent1', 'agent2', 'EnglishRules', 'LudRules']
+
+# 게임 종류에 대해 탐색
+num_game_types = train_data['GameRulesetName'].nunique()
+num_lud_rules = train_data['LudRules'].nunique()
+print(num_game_types, num_lud_rules) # results: 1377, 1373 / why? doesn't same game guarantee same rules?
+
+game_rules_pairs = train_data[['GameRulesetName', 'LudRules']].drop_duplicates()
+duplicates_rules = game_rules_pairs[game_rules_pairs.duplicated(subset=['LudRules'], keep=False)]
+duplicates_rules.to_csv(os.path.join(save_eda_path, 'duplicated_names_with_same_rules.csv')) # NOTE: 다른 이름으로 같은 규칙이 중복되어 있는 것을 발견! 따라서 GameRulesetName 이 feature는 사용하지 말기!
