@@ -38,8 +38,28 @@ print(f'string type columns: {string_columns}') # results: ['GameRulesetName', '
 # 게임 종류에 대해 탐색
 num_game_types = train_data['GameRulesetName'].nunique()
 num_lud_rules = train_data['LudRules'].nunique()
-print(num_game_types, num_lud_rules) # results: 1377, 1373 / why? doesn't same game guarantee same rules?
+num_eng_rules = train_data['EnglishRules'].nunique()
+print(num_game_types, num_lud_rules, num_eng_rules) # results: 1377, 1373, 1328 / why? doesn't same game guarantee same rules?
 
 game_rules_pairs = train_data[['GameRulesetName', 'LudRules']].drop_duplicates()
 duplicates_rules = game_rules_pairs[game_rules_pairs.duplicated(subset=['LudRules'], keep=False)]
 duplicates_rules.to_csv(os.path.join(save_eda_path, 'duplicated_names_with_same_rules.csv')) # NOTE: 다른 이름으로 같은 규칙이 중복되어 있는 것을 발견! 따라서 GameRulesetName 이 feature는 사용하지 말기!
+
+game_rules_pairs = train_data[['EnglishRules', 'LudRules']].drop_duplicates()
+duplicates_rules = game_rules_pairs[game_rules_pairs.duplicated(subset=['EnglishRules'], keep=False)]
+duplicates_rules.to_csv(os.path.join(save_eda_path, 'duplicated_lud_with_same_eng.csv')) # NOTE: 비슷한 eng 규칙이 공백이나 살짝 다른 lud code로 되어 있는 것 확인
+
+# 같은 게임 종류면 같은 feature를 가지는지 탐색
+# NOTE: LudRules에 대해서는 다른 feature 가능, GameRulesetName은 동일한 값에 대해 모두 같은 feature 
+only_features_data = train_data.drop(columns=['Id', 'num_wins_agent1', 'num_draws_agent1', 'num_losses_agent1', 'agent1', 'agent2', 'EnglishRules', 'utility_agent1'])
+only_features_data = only_features_data.drop(columns=identical_features)
+only_features_data = only_features_data.drop(columns=nan_features)
+features_groupby_ludrules = only_features_data.groupby('GameRulesetName').nunique(dropna=False)
+
+print(f'Num of LudRules: 1373, Num of unique feature vectors: {features_groupby_ludrules.max(axis=1).sum()}')
+print('Now print What LudRules has various feature vectors')
+
+for ludrule, group in features_groupby_ludrules.iterrows():
+    not_unique_features = group[group != 1].index
+    if len(not_unique_features) > 0:
+        print(f"Duplicated features: {list(not_unique_features)}") 

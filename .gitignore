@@ -6,4 +6,8 @@ concepts.csv
 sample_submission.csv
 revised_train.csv
 
+output.txt
+
 __pycache__
+
+ludrules_codebert

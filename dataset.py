@@ -1,7 +1,10 @@
 import pandas as pd
+import numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+
+from datasets import Dataset # hugging face library
 
 class MCTSDataset(object):
   def __init__(self, train_path):
@@ -33,7 +36,7 @@ class MCTSDataset(object):
 
     return out 
 
-  def get_data(self, test_size, random_state):
+  def get_data(self):
     # constant or null 값이 아닌 feature만 의미있음
     identical_features = self.train_data.columns[self.train_data.nunique() == 1]
     nan_features = self.train_data.columns[self.train_data.isna().all()].tolist()
@@ -46,7 +49,7 @@ class MCTSDataset(object):
     # string features to vector
     string_features = ['GameRulesetName', 'agent1', 'agent2', 'EnglishRules', 'LudRules']
 
-    useless_string_features = ['GameRulesetName', 'EnglishRules']
+    useless_string_features = ['EnglishRules'] # GameRulesetName은 train test split의 기준으로 이용할 것이다
     self.train_data = self.train_data.drop(columns=useless_string_features)
     
     new_features = ['algorithm','exploration_const', 'playout', 'score']
@@ -55,15 +58,13 @@ class MCTSDataset(object):
         self.train_data[f'{feature}_{agent}'] = self.train_data[agent].apply(lambda x: self.agent_to_feature(x, type))
     self.train_data = self.train_data.drop(columns=['agent1', 'agent2'])
 
-    # NOTE:ludrules특성을 어떻게 다룰건지에 대해서 추후 추가해야 함. 지금은 일단 drop
+    # NOTE:LudRules는 따로 다룰 예정
     self.train_data = self.train_data.drop(columns=['LudRules'])
 
-    # save revised train_data
-    self.train_data.to_csv('revised_train.csv')
-
     # split train & valid set
+    gameset = self.train_data['GameRulesetName']
     X = self.train_data.drop(columns=['utility_agent1'])
     y = self.train_data['utility_agent1']
-    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-    return X_train, X_valid, y_train, y_valid
+    return X, y, gameset
+
