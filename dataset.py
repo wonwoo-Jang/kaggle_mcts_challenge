@@ -2,9 +2,6 @@ import pandas as pd
 import numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-
-from datasets import Dataset # hugging face library
 
 class MCTSDataset(object):
   def __init__(self, train_path):
@@ -49,7 +46,7 @@ class MCTSDataset(object):
     # string features to vector
     string_features = ['GameRulesetName', 'agent1', 'agent2', 'EnglishRules', 'LudRules']
 
-    useless_string_features = ['EnglishRules'] # GameRulesetName은 train test split의 기준으로 이용할 것이다
+    useless_string_features = ['EnglishRules']
     self.train_data = self.train_data.drop(columns=useless_string_features)
     
     new_features = ['algorithm','exploration_const', 'playout', 'score']
@@ -58,7 +55,12 @@ class MCTSDataset(object):
         self.train_data[f'{feature}_{agent}'] = self.train_data[agent].apply(lambda x: self.agent_to_feature(x, type))
     self.train_data = self.train_data.drop(columns=['agent1', 'agent2'])
 
-    # NOTE:LudRules는 따로 다룰 예정
+    # NOTE:LudRules는 tfidf로 벡터화
+    vectorizer = TfidfVectorizer(max_features=512)
+    tfidf_matrix = vectorizer.fit_transform(self.train_data['LudRules'])
+    lud_rules_col = ['LudRules_' + word for word in vectorizer.get_feature_names_out()]
+    tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=lud_rules_col)
+    self.train_data = pd.concat([self.train_data, tfidf_df], axis=1)
     self.train_data = self.train_data.drop(columns=['LudRules'])
 
     # split train & valid set
